@@ -1,0 +1,21 @@
+{
+  "name": "phonebookbackend",
+  "version": "0.0.1",
+  "description": "Puhelinluettelon backend",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "watch": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tiina Leppäkoski",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "morgan": "^1.9.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.4"
+  }
+}
