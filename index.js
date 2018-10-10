@@ -15,6 +15,17 @@ morgan.token('data', function getData(req) {
 
 app.use(morgan(':method :url :data :status :res[content-length] - :response-time ms'))
 
+const Person = require('./models/person')
+
+const formatPerson = (person) => {
+  return {
+    name: person.name,
+    number: person.number,
+    id: person._id
+  }
+}
+
+/*
 let persons = [
   {
     name: "Arto Hellas",
@@ -42,66 +53,95 @@ let persons = [
     id: 5
   }
 ]
-
+*/
 app.get('/', (req, res) => {
   res.send('<h1>Hello World!</h1>')
 })
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Person
+    .find({})
+    .then(persons => {
+      res.json(persons.map(formatPerson))
+    })
 })
 
 app.get('/info', (req, res) => {
   const today = new Date()
-  res.send(
-    `<p>Puhelinluettelossa on ${persons.length} henkilön tiedot<br/>
-      ${today}
-    <p>`
-  )
-
+  Person
+    .find({})
+    .then(persons => {
+      res.send(
+        `<p>Puhelinluettelossa on ${persons.length} henkilön tiedot<br/>
+          ${today}
+        <p>`
+      )
+    })
 })
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id )
-
-  if ( person ) {
-    response.json(person)
-  } else {
-    response.status(404).end()
-  }
-  
+  Person
+    .findById(request.params.id)
+    .then(person => {
+      if (person){
+        response.json(formatPerson(person))
+      }
+      else{
+        response.status(404).end()
+      }
+      
+    })
+    .catch(error => {
+      console.log('Henkilöä ei löytynyt.', error)
+      response.status(400).send({ error: 'malformatted id' })
+    })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  persons = persons.filter(person => person.id !== id)
 
-  response.status(204).end()
+  Person
+    .findByIdAndRemove(request.params.id)
+    .then(result => {
+      console.log('poistettu', result)
+      response.status(204).end()
+    })
+    .catch(error => {
+      console.log('Henkilöä ei voitu poistaa, koska häntä ei löytynyt.', error)
+      response.status(400).send({ error: 'malformatted id' })
+    })
+    
 })
 
 app.post('/api/persons', (request, response) => {
   const body = request.body
-  personNames = persons.map(person => person.name)
-  if (body.name === undefined) {
+  if (body.name === '') {
     return response.status(400).json({error: 'name missing'})
-  }
-  else if(body.number === undefined){
+  } 
+  if(body.number === ''){
     return response.status(400).json({error: 'number missing'})
   }
-  else if(personNames.includes(body.name)){
-    return response.status(400).json({error: 'name already exist on phonebook'})
-  }
 
-  const person = {
+  const person = new Person ({
       name: body.name,
       number: body.number,
-      id: generateId()
-  }
+  })
 
-  persons= persons.concat(person)
-
-  response.json(person)
+  Person
+    .find({name: person.name})
+    .then(result => {
+      console.log(result)
+      if(result.length > 0){
+        console.log('Henkilö on jo luettelossa.')
+        response.status(400).json({error: 'name already on phonebook'})
+      }
+      else{
+        person
+          .save()
+          .then(savedPerson => {
+            response.json(formatPerson(savedPerson))
+          })
+      }
+    }) 
 })
 
 const generateId = () => {
@@ -111,4 +151,24 @@ const generateId = () => {
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+})
+
+app.put('/api/persons/:id', (request, response) => {
+  console.log('updatetaan')
+  const person = {
+    name: request.body.name,
+    number: request.body.number,
+  }
+
+  Person
+    .findByIdAndUpdate(request.params.id, person, { new: true } )
+    .then(updatedPerson => {
+      response.json(formatPerson(updatedPerson))
+      console.log(updatedPerson)
+    })
+    .catch(error => {
+      console.log(error)
+      response.status(400).send({ error: 'malformatted id' })
+    })
+    
 })
