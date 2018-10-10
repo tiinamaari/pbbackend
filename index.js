@@ -122,8 +122,8 @@ app.post('/api/persons', (request, response) => {
   }
 
   const person = new Person ({
-      name: body.name,
-      number: body.number,
+    name: body.name,
+    number: body.number,
   })
 
   Person
