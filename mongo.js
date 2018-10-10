@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 // korvaa url oman tietokantasi urlilla. ethän laita salasanaa Githubiin!
-const url = 'mongodb://tinde:passu123@ds231315.mlab.com:31315/amazingphonebook'
+const url = 'mongodb://<username>:<password>@ds231315.mlab.com:31315/amazingphonebook'
 let newName = ''
 let newNumber = ''
 
